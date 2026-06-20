@@ -1,0 +1,29 @@
+# Render Blueprint - backend album-catalog-api
+# Deploy: Render Dashboard > New > Blueprint > conecta este repo
+services:
+  - type: web
+    name: album-catalog-api
+    runtime: node
+    plan: free
+    # --include=dev garante que typescript (devDep) instale para o build
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      # Postgres do Neon (cole no dashboard - sync:false = nao versionado)
+      - key: DATABASE_URL
+        sync: false
+      # Segredo JWT gerado pelo Render
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      # Credenciais Spotify (cole no dashboard)
+      - key: SPOTIFY_CLIENT_ID
+        sync: false
+      - key: SPOTIFY_CLIENT_SECRET
+        sync: false
+      # URL do frontend na Vercel (cole apos deploy do front)
+      - key: FRONTEND_URLS
+        sync: false
