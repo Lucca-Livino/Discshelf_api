@@ -17,7 +17,7 @@ API REST para catalogação pessoal de álbuns musicais. Permite que usuários c
 ## Instalação
 
 ```bash
-git clone https://github.com/Lucca-Livino/album-catalog-api.git
+git clone https://github.com/Lucca-Livino/Discshelf_api.git
 cd album-catalog-api
 npm install
 ```
