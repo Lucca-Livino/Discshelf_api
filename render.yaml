@@ -2,7 +2,7 @@
 # Deploy: Render Dashboard > New > Blueprint > conecta este repo
 services:
   - type: web
-    name: album-catalog-api
+    name: discshelf_api
     runtime: node
     plan: free
     # --include=dev garante que typescript (devDep) instale para o build
