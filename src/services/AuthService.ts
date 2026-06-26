@@ -8,6 +8,14 @@ export class AuthService {
   constructor(private readonly fastify: FastifyInstance) {}
 
   async register(data: { name: string; email: string; password: string }) {
+    // teto de contas (env.MAX_USERS; 0 = sem limite)
+    if (env.MAX_USERS > 0) {
+      const total = await authRepository.countUsers()
+      if (total >= env.MAX_USERS) {
+        throw new AppError('Limite de cadastros atingido', 403)
+      }
+    }
+
     const existing = await authRepository.findByEmail(data.email)
     if (existing) throw new AppError('E-mail já cadastrado', 409)
 

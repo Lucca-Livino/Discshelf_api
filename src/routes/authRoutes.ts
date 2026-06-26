@@ -2,8 +2,14 @@ import type { FastifyInstance } from 'fastify'
 import { registerHandler, loginHandler } from '../controllers/authController'
 import { S } from '../shared/swagger/schemas'
 
+// rate limit apertado nas rotas sensíveis — anti brute-force
+const authRateLimit = {
+  rateLimit: { max: 5, timeWindow: '1 minute' },
+}
+
 export async function authRoutes(fastify: FastifyInstance) {
   fastify.post('/register', {
+    config: authRateLimit,
     schema: {
       tags: ['Auth'],
       summary: 'Cadastrar novo usuário',
@@ -13,7 +19,7 @@ export async function authRoutes(fastify: FastifyInstance) {
         properties: {
           name:     { type: 'string', minLength: 2 },
           email:    { type: 'string', format: 'email' },
-          password: { type: 'string', minLength: 6 },
+          password: { type: 'string', minLength: 8 },
         },
       },
       response: {
@@ -24,6 +30,7 @@ export async function authRoutes(fastify: FastifyInstance) {
   }, registerHandler)
 
   fastify.post('/login', {
+    config: authRateLimit,
     schema: {
       tags: ['Auth'],
       summary: 'Login — retorna JWT',
