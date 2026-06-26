@@ -11,6 +11,12 @@ services:
     healthCheckPath: /health
     autoDeploy: true
     envVars:
+      # Ambiente de producao: desabilita Swagger /docs publico
+      - key: NODE_ENV
+        value: production
+      # Teto de cadastros (0 = sem limite)
+      - key: MAX_USERS
+        value: 25
       # Postgres do Neon (cole no dashboard - sync:false = nao versionado)
       - key: DATABASE_URL
         sync: false
