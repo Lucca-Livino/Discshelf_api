@@ -1,5 +1,8 @@
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
+import helmet from '@fastify/helmet'
+import rateLimit from '@fastify/rate-limit'
+import { ZodError } from 'zod'
 import { swaggerPlugin } from './shared/plugins/swaggerPlugin'
 import { dbPlugin } from './shared/plugins/dbPlugin'
 import { jwtPlugin } from './shared/plugins/jwtPlugin'
@@ -14,9 +17,19 @@ import { AppError } from './shared/errors/AppError'
 import { env } from './config/env'
 
 export async function buildApp() {
-  const app = Fastify({ logger: true })
+  // trustProxy: Render fica atrás de proxy — necessário pro rate-limit ler o IP real
+  const app = Fastify({ logger: true, trustProxy: true })
 
   const allowedOrigins = env.FRONTEND_URLS.split(',').map((s) => s.trim()).filter(Boolean)
+
+  // security headers (CSP desligado: API JSON, não serve HTML próprio além do Swagger)
+  await app.register(helmet, { contentSecurityPolicy: false })
+
+  // rate limit global — 100 req/min por IP
+  await app.register(rateLimit, {
+    max: 100,
+    timeWindow: '1 minute',
+  })
 
   await app.register(cors, {
     origin: allowedOrigins,
@@ -24,7 +37,12 @@ export async function buildApp() {
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
   })
-  await app.register(swaggerPlugin)
+
+  // Swagger só fora de produção — não expor superfície da API publicamente
+  if (env.NODE_ENV !== 'production') {
+    await app.register(swaggerPlugin)
+  }
+
   await app.register(dbPlugin)
   await app.register(jwtPlugin)
 
@@ -45,6 +63,13 @@ export async function buildApp() {
         statusCode: error.statusCode,
         error: error.name,
         message: error.message,
+      })
+    }
+    if (error instanceof ZodError) {
+      return reply.status(400).send({
+        statusCode: 400,
+        error: 'Bad Request',
+        message: error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; '),
       })
     }
     if (error instanceof Error && 'validation' in error) {
